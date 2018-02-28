@@ -31,6 +31,16 @@ public class MyApplication extends Application {
                     }
 
                     @Override
+                    public void onResume(Activity activity) {
+
+                    }
+
+                    @Override
+                    public void onPause(Activity activity) {
+
+                    }
+
+                    @Override
                     public void onClick(View v) {
                         Log.v("点击事件", v.getId() + "");
                     }
