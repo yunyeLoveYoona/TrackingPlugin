@@ -5,7 +5,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 埋点插件
@@ -14,13 +16,33 @@ import java.util.HashMap;
 
 public class TrackingPlugin {
     private HashMap<Integer, View.OnClickListener> onClickListenerHashMap;
-    private View.OnClickListener trackingOnclickListener;
+    private List<TrackingListener> trackingOnclickListeners;
+    private static TrackingPlugin instance;
+    private TrackingListener activityistener;
+
+    public static TrackingPlugin getInstance() {
+        if (instance == null) {
+            instance = new TrackingPlugin();
+        }
+        return instance;
+    }
 
 
-    public TrackingPlugin(Activity activity) {
+    private TrackingPlugin() {
+        trackingOnclickListeners = new ArrayList<TrackingListener>();
+    }
+
+    public void registerActivity(Activity activity) {
         onClickListenerHashMap = new HashMap<Integer, View.OnClickListener>();
         View root = activity.getWindow().getDecorView();
-        findHasOnClickListenerView((ViewGroup) root);
+        for (TrackingListener trackingOnclickListener : trackingOnclickListeners) {
+            if (trackingOnclickListener.getActivityClass() == activity.getClass()) {
+                activityistener = trackingOnclickListener;
+            }
+        }
+        if (activityistener != null) {
+            findHasOnClickListenerView((ViewGroup) root);
+        }
     }
 
     private void findHasOnClickListenerView(ViewGroup viewGroup) {
@@ -33,8 +55,8 @@ public class TrackingPlugin {
                     @Override
                     public void onClick(View v) {
                         onClickListenerHashMap.get(v.getId()).onClick(v);
-                        if (trackingOnclickListener != null) {
-                            trackingOnclickListener.onClick(v);
+                        if (activityistener != null) {
+                            activityistener.onClick(v);
                         }
                     }
                 });
@@ -79,13 +101,24 @@ public class TrackingPlugin {
         return viewOnclickListener;
     }
 
-
-    public void setTrackingOnclickListener(View.OnClickListener trackingOnclickListener) {
-        this.trackingOnclickListener = trackingOnclickListener;
+    public void unRegisterActivity() {
+        onClickListenerHashMap = null;
+        activityistener = null;
     }
 
-    public void destroy() {
-        trackingOnclickListener = null;
-        onClickListenerHashMap = null;
+    public void addTrackingOnclickListener(TrackingListener trackingOnclickListener) {
+        trackingOnclickListeners.add(trackingOnclickListener);
+    }
+
+    public void onResume(Activity activity) {
+        if (activityistener != null) {
+            activityistener.onResume(activity);
+        }
+    }
+
+    public void onPause(Activity activity) {
+        if (activityistener != null) {
+            activityistener.onPause(activity);
+        }
     }
 }

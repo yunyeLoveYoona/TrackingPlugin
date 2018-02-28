@@ -24,13 +24,18 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityStarted(Activity activity) {
-                trackingPlugin = new TrackingPlugin(activity);
-                trackingPlugin.setTrackingOnclickListener(new View.OnClickListener() {
+                TrackingPlugin.getInstance().addTrackingOnclickListener(new TrackingListener() {
+                    @Override
+                    public Class getActivityClass() {
+                        return MainActivity.class;
+                    }
+
                     @Override
                     public void onClick(View v) {
                         Log.v("点击事件", v.getId() + "");
                     }
                 });
+                TrackingPlugin.getInstance().registerActivity(activity);
             }
 
             @Override
@@ -55,9 +60,7 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityDestroyed(Activity activity) {
-                if(trackingPlugin!=null){
-                    trackingPlugin.destroy();
-                }
+                TrackingPlugin.getInstance().unRegisterActivity();
             }
         });
     }
