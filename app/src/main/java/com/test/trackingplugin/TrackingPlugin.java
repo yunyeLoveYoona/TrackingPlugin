@@ -33,6 +33,7 @@ public class TrackingPlugin {
     }
 
     public void registerActivity(Activity activity) {
+        activityistener = null;
         onClickListenerHashMap = new HashMap<Integer, View.OnClickListener>();
         View root = activity.getWindow().getDecorView();
         for (TrackingListener trackingOnclickListener : trackingOnclickListeners) {
@@ -101,10 +102,7 @@ public class TrackingPlugin {
         return viewOnclickListener;
     }
 
-    public void unRegisterActivity() {
-        onClickListenerHashMap = null;
-        activityistener = null;
-    }
+
 
     public void addTrackingOnclickListener(TrackingListener trackingOnclickListener) {
         trackingOnclickListeners.add(trackingOnclickListener);

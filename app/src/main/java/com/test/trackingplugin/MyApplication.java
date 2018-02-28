@@ -70,7 +70,6 @@ public class MyApplication extends Application {
 
             @Override
             public void onActivityDestroyed(Activity activity) {
-                TrackingPlugin.getInstance().unRegisterActivity();
             }
         });
     }
