@@ -15,10 +15,17 @@ import java.util.List;
  */
 
 public class TrackingPlugin {
-    private HashMap<Integer, View.OnClickListener> onClickListenerHashMap;
+    private HashMap<Class, HashMap<Integer, View.OnClickListener>> onClickListenerHashMap;
     private List<TrackingListener> trackingOnclickListeners;
     private static TrackingPlugin instance;
     private TrackingListener activityistener;
+    private View root;
+    private View childView;
+    private View.OnClickListener childViewOnclickListener;
+    private Class viewClass;
+    private Object mListenerInfo;
+    private Field[] fields;
+    private Class listenerInfoClass;
 
     public static TrackingPlugin getInstance() {
         if (instance == null) {
@@ -30,37 +37,42 @@ public class TrackingPlugin {
 
     private TrackingPlugin() {
         trackingOnclickListeners = new ArrayList<TrackingListener>();
+        onClickListenerHashMap = new HashMap<Class, HashMap<Integer, View.OnClickListener>>();
     }
 
     public void registerActivity(Activity activity) {
         activityistener = null;
-        onClickListenerHashMap = new HashMap<Integer, View.OnClickListener>();
-        View root = activity.getWindow().getDecorView();
         for (TrackingListener trackingOnclickListener : trackingOnclickListeners) {
             if (trackingOnclickListener.getActivityClass() == activity.getClass()) {
                 activityistener = trackingOnclickListener;
             }
         }
-        if (activityistener != null) {
-            findHasOnClickListenerView((ViewGroup) root);
+        if (onClickListenerHashMap.get(activity.getClass()) == null) {
+            onClickListenerHashMap.put(activity.getClass(), new HashMap<Integer, View.OnClickListener>());
+            root = activity.getWindow().getDecorView();
+            if (activityistener != null) {
+                findHasOnClickListenerView((ViewGroup) root);
+            }
         }
     }
 
     private void findHasOnClickListenerView(ViewGroup viewGroup) {
         for (int i = 0; i < viewGroup.getChildCount(); i++) {
-            View childView = viewGroup.getChildAt(i);
-            View.OnClickListener childViewOnclickListener = getViewOnclickListener(childView);
+            childView = viewGroup.getChildAt(i);
+            childViewOnclickListener = getViewOnclickListener(childView);
             if (childViewOnclickListener != null) {
-                onClickListenerHashMap.put(childView.getId(), childViewOnclickListener);
-                childView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        onClickListenerHashMap.get(v.getId()).onClick(v);
-                        if (activityistener != null) {
-                            activityistener.onClick(v);
+                if (!(childViewOnclickListener instanceof TrackingClickListener)) {
+                    onClickListenerHashMap.get(activityistener.getActivityClass()).put(childView.getId(), childViewOnclickListener);
+                    childView.setOnClickListener(new TrackingClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            onClickListenerHashMap.get(activityistener.getActivityClass()).get(v.getId()).onClick(v);
+                            if (activityistener != null) {
+                                activityistener.onClick(v);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
             if (childView instanceof ViewGroup) {
                 findHasOnClickListenerView((ViewGroup) childView);
@@ -70,12 +82,12 @@ public class TrackingPlugin {
     }
 
     private View.OnClickListener getViewOnclickListener(View view) {
-        Class viewClass = null;
+        viewClass = null;
         View.OnClickListener viewOnclickListener = null;
         try {
             viewClass = Class.forName("android.view.View");
-            Object mListenerInfo = null;
-            Field[] fields = viewClass.getDeclaredFields();
+            mListenerInfo = null;
+            fields = viewClass.getDeclaredFields();
             try {
                 for (Field field : fields) {
                     field.setAccessible(true);
@@ -84,7 +96,7 @@ public class TrackingPlugin {
                     }
                 }
                 if (mListenerInfo != null) {
-                    Class listenerInfoClass = Class.forName("android.view.View$ListenerInfo");
+                    listenerInfoClass = Class.forName("android.view.View$ListenerInfo");
                     fields = listenerInfoClass.getDeclaredFields();
                     for (Field field : fields) {
                         field.setAccessible(true);
@@ -103,7 +115,6 @@ public class TrackingPlugin {
     }
 
 
-
     public void addTrackingOnclickListener(TrackingListener trackingOnclickListener) {
         trackingOnclickListeners.add(trackingOnclickListener);
     }
@@ -119,4 +130,9 @@ public class TrackingPlugin {
             activityistener.onPause(activity);
         }
     }
+
+    public void unRegisterActivity(Activity activity) {
+        onClickListenerHashMap.remove(activity.getClass());
+    }
+
 }

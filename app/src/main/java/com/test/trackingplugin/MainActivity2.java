@@ -1,13 +1,12 @@
 package com.test.trackingplugin;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity2 extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -16,14 +15,14 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.test1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "test1", Toast.LENGTH_LONG).show();
-                startActivity(new Intent(MainActivity.this, MainActivity2.class));
+                Toast.makeText(MainActivity2.this, "test1", Toast.LENGTH_LONG).show();
+
             }
         });
         findViewById(R.id.test2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "test2", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity2.this, "test2", Toast.LENGTH_LONG).show();
             }
         });
     }
